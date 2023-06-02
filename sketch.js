@@ -1,159 +1,78 @@
+/**
+ * The graph is a dictionary of GraphNode objects.
+ * The keys are the names of the buttons.
+ * This becomes useful when we want to find a button by name when drawing.
+ */
 graph = {};
+/**
+ * The patterns are the output of the algorithm.
+ * Each pattern is an string of button names.
+ * The patterns array is an array of patterns.
+ */
 patterns = [];
+/**
+ * The lines are part of the drawing step, mostly for clarity.
+ * Each line is a Line object.
+ * The lines array is an array of lines.
+ */
+lines = [];
+/**
+ * Some integers to keep track of the animation state.
+ */
 patternToDisplay = 0;
+lineToDisplay = -2;
 highlightedButtonIndex = -1;
 
 function setup() {
   createCanvas(1024, 768);
-  background(0);
+
   initGraph();
   addConnections();
   // patterns = findZigZags();
-  // patterns = findCircles();
+  patterns = findCircles();
+  lines = makeLines();
 }
 
 function draw() {
   background(0);
-  showPatterns();
+  tick();
+  for (let i = 0; i < lines.length; i++) {
+    if (i <= lineToDisplay) {
+      lines[patternToDisplay][i].show();
+    }
+  }
   for (const key in graph) {
     const button = graph[key];
     button.showHighlight();
     button.show();
   }
 }
-
-function initGraph() {
-  graph["A"] = new GraphNode(
-    "A",
-    color(60, 219, 78),
-    width / 2,
-    height / 2 + 100,
-    null,
-    null,
-    null
-  );
-  graph["B"] = new GraphNode(
-    "B",
-    color(208, 66, 66),
-    width / 2 + 100,
-    height / 2,
-    null,
-    null,
-    null
-  );
-
-  graph["X"] = new GraphNode(
-    "X",
-    color(64, 204, 208),
-    width / 2 - 100,
-    height / 2,
-    null,
-    null,
-    null
-  );
-
-  graph["Y"] = new GraphNode(
-    "Y",
-    color(236, 219, 51),
-    width / 2,
-    height / 2 - 100,
-    null,
-    null,
-    null
-  );
-}
-
-function addConnections() {
-  graph["A"].f = graph["Y"];
-  graph["A"].l = graph["X"];
-  graph["A"].r = graph["B"];
-
-  graph["B"].f = graph["X"];
-  graph["B"].l = graph["A"];
-  graph["B"].r = graph["Y"];
-
-  graph["X"].f = graph["B"];
-  graph["X"].l = graph["Y"];
-  graph["X"].r = graph["A"];
-
-  graph["Y"].f = graph["A"];
-  graph["Y"].l = graph["B"];
-  graph["Y"].r = graph["X"];
-}
-
-function showPatterns() {
-  if (frameCount > 0 && frameCount % 60 == 0) {
+/**
+ * The tick function is called 30 frarmes.
+ * It is used to animate the graph.
+ * It increments the highlighted button, line and pattern.
+ * If the patterns are done, it stops the loop.
+ */
+function tick() {
+  if (frameCount > 0 && frameCount % 30 == 0) {
+    // increment the highlighted button and line
     highlightedButtonIndex++;
+    lineToDisplay++;
+    // higlight the current button
     if (highlightedButtonIndex < patterns[patternToDisplay].length) {
       graph[
         patterns[patternToDisplay][highlightedButtonIndex]
       ].setHighlighted();
     } else {
+      // reset the highlighted button and line
       highlightedButtonIndex = -1;
+      lineToDisplay = -2;
+      // increment the pattern
       patternToDisplay++;
       if (patternToDisplay >= patterns.length) {
-        console.log("done");
+        // we're done
         noLoop();
       }
     }
   }
-}
-
-function findCircles() {
-  const circles = [];
-  // go left
-  for (const key in graph) {
-    const button = graph[key];
-    let circle = button.name;
-    let next = button.l;
-    while (next != button) {
-      circle += next.name;
-      next = next.l;
-    }
-    circles.push(circle);
-  }
-  // go right
-  for (const key in graph) {
-    const button = graph[key];
-    let circle = button.name;
-    let next = button.r;
-    while (next != button) {
-      circle += next.name;
-      next = next.r;
-    }
-    circles.push(circle);
-  }
-  console.log(circles);
-  return circles;
-}
-
-function findZigZags() {
-  const zigzags = [];
-  // go left
-  for (const key in graph) {
-    const button = graph[key];
-    let zigzag = button.name;
-    let next = button.l;
-    zigzag += next.name;
-    next = next.f;
-    zigzag += next.name;
-    next = next.r;
-    zigzag += next.name;
-    zigzags.push(zigzag);
-    console.log(zigzag);
-  }
-  // go right
-  for (const key in graph) {
-    const button = graph[key];
-    let zigzag = button.name;
-    let next = button.r;
-    zigzag += next.name;
-    next = next.f;
-    zigzag += next.name;
-    next = next.l;
-    zigzag += next.name;
-    zigzags.push(zigzag);
-  }
-  console.log(zigzags);
-  return zigzags;
 }
